@@ -1,0 +1,33 @@
+# What NOT to upload to Cloud Build. Mirrors .dockerignore; the image needs only the
+# Dockerfile, api/, web/ source, requirements.txt and data/region_amount_due_80.json.
+.git
+.github
+.venv
+venv
+**/__pycache__
+*.pyc
+**/node_modules
+web/dist
+
+# Notes, tests, local scratch, media
+tests
+test-folder-1
+Garbage
+Resources
+assets
+*.mov
+*.mp4
+
+# Big / gated / runtime data — only the region file is needed (not excluded here)
+data/docile
+data/ocr_cache
+data/kleister
+data/propublica-990-api
+data/sample_*
+data/*.db
+data/*.svg
+data/heatmap*
+
+# Secrets must never reach the build
+.env
+.env.*
