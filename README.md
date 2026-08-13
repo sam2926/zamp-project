@@ -26,7 +26,7 @@ _A short walkthrough of the workflow on the site — upload, live progress, revi
 
 Built for the Zamp project round (Problem 3: _turn messy documents into structured, queryable data_). The full reasoning behind every decision is in **[decisions.md](decisions.md)**.
 
-> **Status:** runs locally (API + web). Deployment to a public URL is planned (Hugging Face Spaces on Docker — see decisions.md). Extraction is scoped to one field, `amount_due`, done deeply rather than 55 fields done shallowly (see _Scope_ below).
+> **Status:** **[▶ Live demo](https://invoice-extraction-108246044000.us-central1.run.app)** — deployed on Google Cloud Run. Bring your own OpenAI/Anthropic key to process an upload; the first visit is a slow cold start (~30–60s) while the OCR model loads, then it's fast. Runs locally too — see Setup. Extraction is scoped to one field, `amount_due`, done deeply rather than 55 fields done shallowly (see _Scope_ below).
 
 ---
 
