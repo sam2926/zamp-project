@@ -21,6 +21,8 @@ CLAUDE.md
 venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
 
 # Node — rebuilt from package-lock.json
 node_modules/
