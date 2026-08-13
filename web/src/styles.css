@@ -666,9 +666,50 @@ tbody tr.rowlink:hover .rowlink-target {
   color: var(--ink);
 }
 
-.state p {
+.state p,
+.state-body {
   margin: 0;
   max-width: 44ch;
+}
+
+.state-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 46ch;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-weight: 600;
+  color: #c6c7cc;
+}
+
+.state-points li {
+  position: relative;
+  padding-left: 18px;
+}
+
+.state-points li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c9ba92;
+}
+
+/* The empty/loading/error states sit on the dark plane here, so they need light
+   ink — the default .state ink is tuned for the light plane (black on black). */
+.live-stage .state {
+  margin-top: 52px;
+  color: #9a9a9a;
+}
+
+.live-stage .state h2 {
+  color: #fff;
 }
 
 .state-actions {
@@ -3019,6 +3060,31 @@ html:has(.shell) body {
   font-size: 15px;
   line-height: 1.65;
   color: var(--scr-ink-2);
+}
+
+.home-sub-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.home-sub-list li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.home-sub-list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--scr-gold);
 }
 
 .home-cta {

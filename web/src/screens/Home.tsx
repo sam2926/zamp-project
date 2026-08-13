@@ -23,31 +23,30 @@ export default function Home() {
               <h1 className="home-title">
                 Transform Your Business with <span className="home-nowrap">AI-Powered</span> Solutions
               </h1>
-              <p className="home-sub">
-                We read the fields that matter off a scanned invoice — who it is for, how much, and
-                when — by cropping each page to the region a value sits in, reading only that slice,
-                and checking the answer before we trust it. Fewer tokens, more to trust.
-              </p>
+              <ul className="home-sub home-sub-list">
+                <li>We read the fields that matter off a scanned invoice.</li>
+                <li>We check every answer before we trust it — fewer tokens, more to trust.</li>
+              </ul>
               <div className="home-cta">
                 <Link to="/upload" className="home-btn is-primary">
                   Try it on an invoice
                 </Link>
                 <Link to="/dashboard" className="home-btn is-ghost">
-                  See the results
+                  CR results
                 </Link>
               </div>
             </div>
 
             <aside className="home-card">
-              <span className="home-card-eyebrow">What it does</span>
+              <span className="home-card-eyebrow">What this platform does for you</span>
               <p className="home-card-lead">
-                A simple way to turn scattered, unstructured documents into clean, organized data.
+                A simple way to turn scattered, unstructured invoices into clean, organized data.
               </p>
               <ol className="home-steps">
                 <li className="home-step">
                   <span className="home-step-n">1</span>
                   <div className="home-step-body">
-                    <strong>Upload your documents</strong>
+                    <strong>Upload your invoices</strong>
                     <p>Bring your files in whatever form they arrive.</p>
                   </div>
                 </li>

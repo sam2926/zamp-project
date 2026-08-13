@@ -82,14 +82,34 @@ export default function LiveProgress() {
   const jobs = data.jobs
   if (jobs.length === 0) {
     return (
-      <PlaneWrap>
-        <EmptyState
-          icon={<DocIcon />}
-          title="No files uploaded yet"
-          body="Upload invoices and this is where they’re processed. Anything we read confidently clears on its own — only the ones that need a human stay here for you."
-          action={<button className="btn" onClick={() => navigate('/upload')}>Upload invoices</button>}
-        />
-      </PlaneWrap>
+      <div className="upload-plane">
+        <PageTabs />
+        <div className="upload-stage">
+          <div className="upload-column">
+            <section className="upload-card">
+              <div className="upload-body">
+                <span className="upload-icon"><DocIcon /></span>
+                <div className="upload-content">
+                  <h2>No files uploaded yet</h2>
+                  <ul className="state-points">
+                    <li>Upload invoices and this is where they’re processed.</li>
+                    <li>Anything we read confidently clears on its own, only the ones that need a human stay here for you.</li>
+                  </ul>
+                  <div className="upload-actions">
+                    <button
+                      type="button"
+                      className="upload-btn upload-btn-primary"
+                      onClick={() => navigate('/upload')}
+                    >
+                      Upload invoices
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
     )
   }
 

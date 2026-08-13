@@ -22,14 +22,14 @@ export function EmptyState({
 }: {
   icon: ReactNode
   title: string
-  body: string
+  body: ReactNode
   action?: ReactNode
 }) {
   return (
     <div className="state">
       <span className="state-icon">{icon}</span>
       <h2>{title}</h2>
-      <p>{body}</p>
+      <div className="state-body">{body}</div>
       {action && <div className="state-actions">{action}</div>}
     </div>
   )
