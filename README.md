@@ -14,11 +14,16 @@ _A short walkthrough of the workflow on the site — upload, live progress, revi
 
 **<span style="color:#B8860B">3 · Read every page the same way.</span>** We normalize every word to page fractions (0–1), so a tiny scan and a full-page fax sit on one coordinate system.
 
+<table>
+<tr>
+<td width="170"><img src="assets/heatmaps/amount_due.svg" width="160" alt="amount_due density heat map — the black box is the learned region"></td>
+<td valign="middle">
+
 **<span style="color:#B8860B">4 · Build a heat map.</span>** Over a 50×50 grid we count where a field's answer actually lands across thousands of documents, every cell its _whole box_ touches, giving a density map of where the answer lives.
 
-<div align="center">
-  <img src="assets/heatmaps/amount_due.svg" alt="Learned density heat map for amount_due — the region (black box) covers 25.8% of the page yet holds 80% of labelled values" width="360">
-</div>
+</td>
+</tr>
+</table>
 
 **<span style="color:#B8860B">5 · Draw the region.</span>** We take the smallest rectangle covering ~95% of that density. For `amount_due` it sits over the totals block, about ~23% of the page's _text_ (most of the rest it spans is margin).
 
