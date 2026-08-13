@@ -45,5 +45,6 @@ COPY --chown=user:user --from=web /web/dist ./web/dist
 
 # No key is shipped: uploads use the visitor's own key, so keyless requests are refused.
 # (ALLOW_STUB is intentionally unset — this is production.)
+# Listen on $PORT if the host injects one (Cloud Run sets 8080), else 7860 (HF Spaces / local).
 EXPOSE 7860
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-7860}"]
