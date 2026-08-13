@@ -3,10 +3,12 @@
 ## <span style="color:#2E7D32">TL;DR</span>
 
 <div align="center">
-  <video src="https://github.com/sam2926/zamp-project/raw/main/assets/walkthrough.mp4" controls width="720"></video>
+  <a href="https://github.com/sam2926/zamp-project/blob/main/assets/walkthrough.mp4">
+    <img src="assets/walkthrough-poster.png" alt="Watch the walkthrough" width="720">
+  </a>
 </div>
 
-_A short walkthrough of the workflow on the site, upload, live progress, review, export._
+_▶ A short walkthrough of the workflow on the site — **click to play** (upload, live progress, review, export)._
 
 **<span style="color:#B8860B">1 · Learn from labeled invoices.</span>** We take as many human-labeled invoices as the client can provide, real scans with the answers, that's the data the whole process learns from.
 

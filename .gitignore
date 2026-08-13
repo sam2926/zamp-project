@@ -50,6 +50,9 @@ web/.vite/
 # The deployment runbook
 !DEPLOY.md
 
+# The README's walkthrough poster (PNGs are otherwise ignored)
+!assets/walkthrough-poster.png
+
 # Small data the app and its tests genuinely need (the big corpus stays ignored):
 #   - the learned regions: the app loads one at startup, so a clone must have it
 #   - the saved evaluation runs: the performance check re-scores these in CI
