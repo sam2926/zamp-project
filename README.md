@@ -3,7 +3,7 @@
 ## <span style="color:#2E7D32">TL;DR</span>
 
 <div align="center">
-  <video src="https://github.com/user-attachments/assets/d4920535-ab99-495b-8c86-40ee1f3b3fd0" poster="https://raw.githubusercontent.com/sam2926/zamp-project/main/assets/walkthrough-poster.png" controls width="720"></video>
+  <video src="https://github.com/user-attachments/assets/766e3c37-bc4c-42b8-a4dd-c989dd4a4230" controls width="720"></video>
 </div>
 
 _A short walkthrough of the workflow on the site — upload, live progress, review, export._
