@@ -1,0 +1,10 @@
+# Test dependencies — deliberately light. The app's heavy deps (torch/docTR and the
+# OpenAI/Anthropic SDKs) are imported lazily, so the whole suite runs without them: OCR
+# and the model call are mocked. This keeps CI to a few seconds instead of pulling a
+# 2.5 GB PyTorch wheel.
+fastapi>=0.115
+python-multipart>=0.0.12
+pymupdf>=1.26
+python-dotenv>=1.0
+pytest>=8
+httpx>=0.27          # Starlette's TestClient transport
