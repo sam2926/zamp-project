@@ -27,7 +27,7 @@ _A short walkthrough of the workflow on the site — upload, live progress, revi
 
 **<span style="color:#B8860B">5 · Draw the region.</span>** We take the smallest rectangle covering ~95% of that density. For `amount_due` it sits over the totals block, about ~23% of the page's _text_ (most of the rest it spans is margin).
 
-**<span style="color:#B8860B">6 · Send only that — with a fallback.</span>** The model sees just that slice; the value is inside it **88%** of the time. But when the crop comes back empty — the model didn't find it there — we **fall back to the whole page**, and those documents pay for the crop _and_ the full page. That fallback is why the real saving is **14% fewer tokens** (86% of the baseline), not the crop's ~23%. Net across all 291: **+3.8 pts** accuracy at **14% cheaper**.
+**<span style="color:#B8860B">6 · Send only that — with a fallback.</span>** The model sees just that slice; the value is inside it **88%** of the time. But when the crop comes back empty — the model didn't find it there — we **fall back to the whole page**, and those documents pay for the crop _and_ the full page. That fallback is why the real saving is **14% fewer tokens** (86% of the baseline), not the crop's ~23%. Net across all 291: **~4%** accuracy at **14% cheaper**.
 
 **<span style="color:#B8860B">7 · Score how much to trust it.</span>** Every value gets a confidence from _evidence_, not the model's say-so, whether it landed in its expected region (**99%** right when it did, **65%** when it didn't) and whether it passes deterministic checks (present in the OCR text, money-shaped).
 
@@ -63,10 +63,10 @@ Measured on 291 held-out val invoices, live `gpt-4o-mini`:
 
 |          | whole-page baseline | this pipeline | change       |
 | -------- | ------------------- | ------------- | ------------ |
-| accuracy | 73.5%               | **77.3%**     | **+3.8 pts** |
+| accuracy | 73.5%               | **77.3%**     | **~4%** |
 | tokens   | 74,181              | **63,918**    | **−14%**     |
 
-Nearly **4 points more accurate** on **14% fewer tokens**. Full tables, and every rejected alternative, are in [decisions.md](decisions.md).
+Nearly **4% more accurate** on **14% fewer tokens**. Full tables, and every rejected alternative, are in [decisions.md](decisions.md).
 
 ---
 
