@@ -29,9 +29,13 @@ ENV PATH="/home/user/.local/bin:$PATH" \
     PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# CPU-only PyTorch — the free tier has no GPU, and this keeps the image far smaller.
+# CPU-only PyTorch — no GPU here, and it keeps the image far smaller. torch/torchvision come
+# from PyTorch's CPU index; --index-url replaces PyPI, so PyPI is re-added as an extra index
+# or build deps (e.g. flit_core) can't be found and the build fails.
 RUN pip install --user --no-cache-dir \
-        torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        torch torchvision \
+        --index-url https://download.pytorch.org/whl/cpu \
+        --extra-index-url https://pypi.org/simple
 COPY --chown=user:user requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
 
