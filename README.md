@@ -14,11 +14,15 @@ _A short walkthrough of the workflow on the site — upload, live progress, revi
 
 **<span style="color:#B8860B">3 · Read every page the same way.</span>** We normalize every word to page fractions (0–1), so a tiny scan and a full-page fax sit on one coordinate system.
 
-**<span style="color:#B8860B">4 · Build a heat map.</span>** Over a 50×50 grid we count where a field's answer actually lands across thousands of documents, every cell its _whole box_ touches, iving a density map of where the answer lives.
+**<span style="color:#B8860B">4 · Build a heat map.</span>** Over a 50×50 grid we count where a field's answer actually lands across thousands of documents, every cell its _whole box_ touches, giving a density map of where the answer lives.
+
+<div align="center">
+  <img src="assets/heatmaps/amount_due.svg" alt="Learned density heat map for amount_due — the region (black box) covers 25.8% of the page yet holds 80% of labelled values" width="360">
+</div>
 
 **<span style="color:#B8860B">5 · Draw the region.</span>** We take the smallest rectangle covering ~95% of that density. For `amount_due` it sits over the totals block, about ~23% of the page's _text_ (most of the rest it spans is margin).
 
-**<span style="color:#B8860B">6 · Send only that.</span>** The model sees just that slice, not the whole page; the answer is inside it **88%** of the time → **77.3%** accuracy at **86%** of the whole-page tokens.
+**<span style="color:#B8860B">6 · Send only that — with a fallback.</span>** The model sees just that slice; the value is inside it **88%** of the time. But when the crop comes back empty — the model didn't find it there — we **fall back to the whole page**, and those documents pay for the crop _and_ the full page. That fallback is why the real saving is **14% fewer tokens** (86% of the baseline), not the crop's ~23%. Net across all 291: **+3.8 pts** accuracy at **14% cheaper**.
 
 **<span style="color:#B8860B">7 · Score how much to trust it.</span>** Every value gets a confidence from _evidence_, not the model's say-so, whether it landed in its expected region (**99%** right when it did, **65%** when it didn't) and whether it passes deterministic checks (present in the OCR text, money-shaped).
 
@@ -52,12 +56,12 @@ Turn scanned invoices into structured data — and, for every value, say **how m
 
 Measured on 291 held-out val invoices, live `gpt-4o-mini`:
 
-|          | whole-page baseline | this pipeline    |
-| -------- | ------------------- | ---------------- |
-| accuracy | 73.5%               | **77.3%**        |
-| tokens   | 74,181              | **63,918 (86%)** |
+|          | whole-page baseline | this pipeline | change       |
+| -------- | ------------------- | ------------- | ------------ |
+| accuracy | 73.5%               | **77.3%**     | **+3.8 pts** |
+| tokens   | 74,181              | **63,918**    | **−14%**     |
 
-Better accuracy _and_ cheaper. Full tables, and every rejected alternative, are in [decisions.md](decisions.md).
+Nearly **4 points more accurate** on **14% fewer tokens**. Full tables, and every rejected alternative, are in [decisions.md](decisions.md).
 
 ---
 
