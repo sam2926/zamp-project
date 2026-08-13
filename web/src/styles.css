@@ -1,0 +1,3618 @@
+@import 'tailwindcss';
+
+/* Plus Jakarta Sans is loaded by a <link> in index.html, not a CSS @import:
+   an @import here would have to precede Tailwind's own rules, and a link tag
+   starts the font fetch earlier anyway. */
+
+/* Cascade architecture — the thing that keeps Tailwind from eating this file.
+ *
+ * Tailwind's preflight lives in `@layer base`, and unlayered CSS beats every
+ * layer regardless of source order. So:
+ *
+ *   - element rules (body, h1, a, table…) go in `@layer base`, AFTER preflight,
+ *     so they win over the reset but still lose to a Tailwind utility. That is
+ *     what lets `text-5xl` work on an <h1> in the landing page.
+ *   - component classes (.card, .field, .chip…) stay UNLAYERED, so preflight
+ *     cannot touch the three screens that were built before Tailwind existed.
+ */
+
+/* shadcn colour tokens, mapped so Tailwind generates bg-background, text-foreground,
+   border-border and friends. Defaults are the app's light chrome; the landing
+   re-declares them dark on its own scope. */
+@theme {
+  --color-background: #f9f9f7;
+  --color-foreground: #0b0b0b;
+  --color-primary: #2a78d6;
+  --color-secondary: #1baf7a;
+  --color-destructive: #d03b3b;
+  --color-muted-foreground: #898781;
+  --color-border: #e1e0d9;
+}
+
+/* Design tokens.
+ *
+ * Colours are the validated reference palette: categorical slot 1 for single-series
+ * charts, the reserved status palette for field state, and the documented chrome/ink
+ * ramp. Surfaces are the palette's own, so its validated contrast figures hold.
+ *
+ * The app is light only, declared rather than assumed. The landing section is
+ * deliberately dark and scopes its own tokens — it is not a theme, it is one
+ * section with its own palette.
+ */
+:root {
+  color-scheme: light;
+
+  --surface: #fcfcfb;
+  --plane: #f9f9f7;
+  --sunken: #f2f1ed;
+
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-muted: #898781;
+
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+  --ring: rgba(42, 120, 214, 0.35);
+
+  --series-1: #2a78d6;
+
+  /* Reserved status palette — never used for anything that isn't a state.
+     Several sit below 3:1 on this surface by design, so every use pairs the
+     colour with a text label. Colour never carries the meaning alone. */
+  --good: #0ca30c;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+
+  --good-wash: #eaf7ea;
+  --warning-wash: #fdf4e0;
+  --serious-wash: #fdeee7;
+  --critical-wash: #fbeaea;
+
+  --radius: 6px;
+  --radius-lg: 16px;
+
+  --font: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* The upload page keeps the reference's lavender plane, exact value. */
+  --upload-plane: #d2d4e1;
+  --card-dark: #1b1d24;
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  h1 {
+    font-size: 20px;
+  }
+  h2 {
+    font-size: 16px;
+  }
+  h3 {
+    font-size: 13px;
+  }
+
+  a {
+    color: var(--series-1);
+  }
+
+  button {
+    font: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--series-1);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+}
+
+/* ---------- app shell ---------- */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.brand-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--series-1);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  gap: 2px;
+}
+
+.nav a {
+  padding: 6px 11px;
+  border-radius: var(--radius);
+  color: var(--ink-2);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav a:hover {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.nav a.active {
+  background: var(--sunken);
+  color: var(--ink);
+}
+
+.main {
+  flex: 1;
+  padding: 24px 20px 64px;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.page-head {
+  margin-bottom: 20px;
+}
+
+.page-head p {
+  margin: 5px 0 0;
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+
+/* ---------- surfaces ---------- */
+
+.card {
+  background: var(--surface);
+  /* Explicit: the shell around it is dark, so ink must not be inherited. */
+  color: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.card-head {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.card-head .hint {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+/* ---------- controls ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--sunken);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #256abf;
+}
+
+.btn-sm {
+  padding: 4px 9px;
+  font-size: 13px;
+}
+
+.seg {
+  display: inline-flex;
+  background: var(--sunken);
+  border-radius: var(--radius);
+  padding: 2px;
+  gap: 2px;
+}
+
+.seg button {
+  padding: 5px 11px;
+  border: 0;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.seg button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(11, 11, 11, 0.08);
+}
+
+input[type='text'] {
+  padding: 6px 9px;
+  border: 1px solid var(--axis);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+/* ---------- status ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--ink);
+}
+
+.chip-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.chip[data-status='ok'] {
+  background: var(--good-wash);
+}
+.chip[data-status='review'] {
+  background: var(--warning-wash);
+}
+.chip[data-status='repaired'] {
+  background: var(--serious-wash);
+}
+.chip[data-status='missing'] {
+  background: var(--critical-wash);
+}
+
+/* ---------- confidence ---------- */
+
+.conf {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.conf-meter {
+  width: 46px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--grid);
+  overflow: hidden;
+  flex: none;
+}
+
+.conf-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.conf-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--ink-2);
+  min-width: 30px;
+}
+
+/* ---------- field list ---------- */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  border-left: 2px solid transparent;
+}
+
+.field:last-child {
+  border-bottom: 0;
+}
+
+.field:hover {
+  background: var(--plane);
+}
+
+.field[aria-selected='true'] {
+  background: var(--plane);
+  border-left-color: var(--series-1);
+}
+
+.field-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.field-name {
+  font-size: 12px;
+  color: var(--ink-muted);
+  font-family: var(--mono);
+}
+
+.field-value {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.field-edit {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.field-edit input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-value.is-missing {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.field-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.field-reason {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.field-reason::before {
+  content: '';
+  width: 2px;
+  align-self: stretch;
+  border-radius: 1px;
+  background: var(--axis);
+  flex: none;
+}
+
+.field-original {
+  font-family: var(--mono);
+  text-decoration: line-through;
+  color: var(--ink-muted);
+}
+
+/* ---------- page view ---------- */
+
+.pageview {
+  position: sticky;
+  top: 76px;
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.414;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.sheet img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.sheet-note {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 7px 9px;
+  border-radius: var(--radius);
+  background: rgba(11, 11, 11, 0.72);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.box {
+  position: absolute;
+  border: 1.5px solid var(--series-1);
+  border-radius: 2px;
+  background: rgba(42, 120, 214, 0.1);
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    background 120ms ease;
+}
+
+.box[data-dim='true'] {
+  opacity: 0.28;
+}
+
+.box-tag {
+  position: absolute;
+  top: -16px;
+  left: -1px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--series-1);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+/* ---------- tables ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr.rowlink:hover {
+  background: var(--plane);
+  cursor: pointer;
+}
+
+.rowlink-target {
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+tbody tr.rowlink:hover .rowlink-target {
+  text-decoration: underline;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- stat tiles ---------- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+
+.tile-label {
+  font-size: 12px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tile-value {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+  line-height: 1.1;
+}
+
+.tile-note {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 3px;
+}
+
+/* ---------- states ---------- */
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--ink-2);
+}
+
+.state-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sunken);
+  color: var(--ink-muted);
+}
+
+.state h2 {
+  color: var(--ink);
+}
+
+.state p {
+  margin: 0;
+  max-width: 44ch;
+}
+
+.state-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+}
+
+.banner {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  padding: 10px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.banner[data-tone='critical'] {
+  background: var(--critical-wash);
+}
+.banner[data-tone='warning'] {
+  background: var(--warning-wash);
+}
+.banner[data-tone='neutral'] {
+  background: var(--sunken);
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid var(--grid);
+  border-top-color: var(--series-1);
+  animation: spin 700ms linear infinite;
+  flex: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------- layout helpers ---------- */
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.mono {
+  font-family: var(--mono);
+}
+
+/* ---------- landing ----------
+ *
+ * The landing is dark; the app is light. Rather than theming the whole app, this
+ * scope re-declares the shadcn tokens locally. Both sets are declared: `--color-*`
+ * is what Tailwind utilities read, and the bare names are what the cinematic
+ * component's `color-mix()` expressions read.
+ *
+ * These are the palette's own dark-column steps, not inverted light ones.
+ */
+.landing {
+  color-scheme: dark;
+
+  --color-background: #0d0d0d;
+  --color-foreground: #ffffff;
+  --color-primary: #3987e5;
+  --color-secondary: #199e70;
+  --color-destructive: #e66767;
+  --color-muted-foreground: #898781;
+  --color-border: #333330;
+
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --primary: #3987e5;
+  --secondary: #199e70;
+  --destructive: #e66767;
+  --muted-foreground: #898781;
+  --border: #333330;
+}
+
+/* While the landing is mounted the document itself goes black, so overscrolling
+   past either end shows black rather than the app's pale plane. */
+html[data-page='landing'],
+html[data-page='landing'] body {
+  background: #0d0d0d;
+}
+
+/* Every other route renders on the dark `.shell`. Take the document root to the
+   shell's own base tone, so a rubber-band overscroll past either end shows that
+   instead of the pale app default (or the accent gradient bleeding through). Keyed
+   on `.shell` being mounted, which is exactly the tab pages. */
+html:has(.shell),
+html:has(.shell) body {
+  background: #151419;
+}
+
+/* ---------- page tabs ----------
+ *
+ * Not a nav bar: no background, no border, no sticky. The row is page content,
+ * placed by each page inside its own plane, so it inherits that plane's tone.
+ */
+.page-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+/* The Home pill: same shape as a tab, pinned to the far left. `margin-right: auto`
+   pushes the section tabs to the right and lets the whole row wrap cleanly. */
+.page-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: auto;
+  padding: 7px 16px 7px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.page-home:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+
+.page-logo {
+  width: 21px;
+  height: 21px;
+  flex: none;
+}
+
+.page-tabs-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Default is the dark plane, since that is now every tab page. */
+.page-tabs-row a {
+  padding: 9px 20px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.page-tabs-row a:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+
+.page-tabs-row a.active {
+  /* The gradient accent that warms the black plane (`--accent` is this at 0.72),
+     used solid so the selected tab reads as the same family as the background. */
+  background: #5b5139;
+  border-color: #5b5139;
+  color: #fff;
+}
+
+/* Every tab page is now the same dark plane, so there is no light variant. */
+
+/* ---------- process page ----------
+ *
+ * Full-bleed: it carries the upload card's surface across the whole page, so it
+ * sits outside the standard `.main` gutter and provides its own.
+ */
+/* The surface now comes from `.shell`, shared with every other tab page. This
+   only supplies the full-bleed gutter. */
+.process-plane {
+  min-height: 100vh;
+  padding: 28px 20px 88px;
+}
+
+.process-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ---------- timeline ----------
+ *
+ * Geometry, radii, spacing and type are the reference component's measured
+ * values (row gap 24, rows 48 apart, card radius 10 / padding 16, 12/600 step
+ * label, 18/600 title, 14/400 body). Two deliberate departures:
+ *
+ *   - the blue→purple ramp on the rail and markers becomes #5b5139;
+ *   - the 16px dot becomes a 32px numbered circle, so the step number fits.
+ *
+ * The card carries the upload card's exact surface — it is in the same shared
+ * declaration — plus a hairline and a drop shadow, which is what keeps it
+ * legible against a page painted with that same gradient.
+ */
+/* Centred in the page, as in the reference.
+ *
+ * The top offset is a margin rather than padding on purpose: the rail is
+ * positioned against this box, so padding would start it above the first
+ * marker. Margin drops the whole chain without moving the rail relative to it. */
+.timeline {
+  position: relative;
+  max-width: 620px;
+  margin: 120px auto 0;
+}
+
+/* The rail. Sits at the centre line of the 32px markers. */
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(201, 186, 146, 0.45) 0%,
+    rgba(91, 81, 57, 0.45) 100%
+  );
+}
+
+.timeline-row {
+  position: relative;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.timeline-row + .timeline-row {
+  margin-top: 48px;
+}
+
+.timeline-marker {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #151419;
+  background: linear-gradient(135deg, #c9ba92 0%, #8a7c5a 100%);
+  box-shadow: 0 0 12px rgba(139, 124, 90, 0.5);
+  color: #151419;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.timeline-card {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.timeline-step {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #c9ba92;
+}
+
+.timeline-card h3 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.timeline-card p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: #cfcfcf;
+}
+
+@media (max-width: 560px) {
+  .timeline-row {
+    gap: 16px;
+  }
+  .timeline::before {
+    left: 15px;
+  }
+}
+
+/* ---------- heat maps (scroll-linked) ----------
+ *
+ * Two columns. The map is pinned on the left; the five write-ups scroll past on the right.
+ * An IntersectionObserver flips `.is-active`, and the maps crossfade to match the section
+ * in view. The map stack is absolutely positioned inside a fixed-ratio frame so the swap
+ * has no layout cost.
+ */
+.hm-scroll {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.hm-media-col {
+  position: relative;
+}
+
+.hm-sticky {
+  position: sticky;
+  top: 32px;
+}
+
+.hm-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 460 / 660;
+  max-height: calc(100vh - 64px);
+}
+
+.hm-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top center;
+  opacity: 0;
+  transition: opacity 420ms ease;
+  pointer-events: none;
+}
+
+.hm-map.is-active {
+  opacity: 1;
+}
+
+/* right column: one screenful-ish per field so the map has room to swap */
+.hm-sections {
+  display: flex;
+  flex-direction: column;
+}
+
+.hm-section {
+  min-height: 78vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6vh 0;
+  opacity: 0.42;
+  transition: opacity 360ms ease;
+}
+
+.hm-section.is-active {
+  opacity: 1;
+}
+
+.hm-index {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #6b7280;
+}
+
+.hm-section .hm-title {
+  margin: 10px 0 0;
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 36px;
+  letter-spacing: -0.01em;
+  color: #f4f4f5;
+}
+
+.hm-gloss {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: #9296a0;
+}
+
+.hm-stats {
+  margin: 26px 0 0;
+  max-width: 340px;
+}
+
+.hm-stats > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.hm-stats dt {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7280;
+}
+
+.hm-stats dd {
+  margin: 0;
+  font-size: 15px;
+  color: #e5e7eb;
+  font-variant-numeric: tabular-nums;
+}
+
+.hm-foot {
+  margin: 16px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-map,
+  .hm-section {
+    transition: none;
+  }
+}
+
+@media (max-width: 860px) {
+  /* stack: the map stops pinning and sits above each write-up is overkill, so keep one
+     pinned map at the top and let the sections scroll beneath it. */
+  .hm-scroll {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .hm-sticky {
+    top: 16px;
+  }
+  .hm-frame {
+    max-height: 46vh;
+    margin: 0 auto;
+  }
+  .hm-section {
+    min-height: 0;
+    padding: 24px 0;
+    text-align: center;
+    align-items: center;
+  }
+  .hm-stats {
+    text-align: left;
+  }
+}
+
+/* ---------- process (scroll-linked pipeline) ----------
+ *
+ * The same sticky-scroll pattern as the heat maps above: the step's explanation
+ * card is pinned on the left and crossfades; the numbered step list scrolls past
+ * on the right. One IntersectionObserver flips `.is-active` (see Process.tsx).
+ *
+ * The pinned card reuses `.timeline-card` (and `.timeline-step` / h3 / p inside
+ * it) so it carries the exact shared accent surface; the right-hand circles
+ * reuse `.timeline-marker`. This block only adds the two-column scroll layout.
+ */
+.proc-scroll {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 56px;
+  max-width: 1120px;
+  margin: 40px auto 0;
+}
+
+.proc-media-col {
+  position: relative;
+}
+
+/* Full-height sticky band so the fixed card sits at the vertical centre of the
+   viewport — the same centre the active heading lands on. */
+.proc-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* A fixed rectangle. Every step shows the same box; only the contents crossfade,
+   so nothing jumps as the size changes. */
+.proc-frame {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 460px;
+}
+
+.proc-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px;
+  opacity: 0;
+  transition: opacity 420ms ease;
+  pointer-events: none;
+}
+
+.proc-card.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.proc-card h3 {
+  margin: 6px 0 0;
+}
+
+.proc-bullets {
+  margin: 18px 0 0;
+  padding: 0 0 0 20px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.proc-bullets li {
+  font-size: 14px;
+  line-height: 20px;
+  color: #cfcfcf;
+}
+
+.proc-bullets li::marker {
+  color: #c9ba92;
+}
+
+/* Vertical padding so the first and last headings can reach the centre line. */
+.proc-steps {
+  list-style: none;
+  margin: 0;
+  padding: 24vh 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One step per ~half screen, so the pinned card has room to swap between them. */
+.proc-step {
+  min-height: 52vh;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 4vh 0;
+  opacity: 0.4;
+  transition: opacity 360ms ease;
+}
+
+.proc-step.is-active {
+  opacity: 1;
+}
+
+.proc-step-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: #c9ba92;
+}
+
+.proc-step h4 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proc-card,
+  .proc-step {
+    transition: none;
+  }
+}
+
+@media (max-width: 860px) {
+  /* Stack: the card stops pinning tall and the steps scroll beneath it, matching
+     the heat maps' mobile behaviour. */
+  .proc-scroll {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .proc-sticky {
+    top: 16px;
+  }
+  .proc-step {
+    min-height: 0;
+    padding: 20px 0;
+  }
+}
+
+/* ---------- upload page ----------
+ *
+ * Every value here is measured off the reference component's rendered styles,
+ * not estimated from a screenshot: 608x240 card, 16px radius, #151419 base, a
+ * single radial from the exact top-right corner, one tight shadow, 19.2/600
+ * title over 16/400 body, and near-square 3.6px buttons at a flat #222127.
+ *
+ * The one deliberate departure is hue: the working state uses our gold instead
+ * of the reference's blue. Success and error keep the reference's green and red
+ * because those two carry meaning.
+ */
+/* No background of its own — it inherits the shell's surface like every other
+   tab page. The card is separated from it by its border and shadow rather than
+   by a contrasting plane. */
+.upload-plane {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px 48px;
+}
+
+.upload-plane .page-tabs {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto 0;
+}
+
+/* The card stays optically centred in whatever space the tabs leave. */
+.upload-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The accent surface, declared exactly once.
+ *
+ * The upload card, the timeline cards and the whole app shell share this single
+ * declaration, so they can never drift apart. */
+.upload-card,
+.key-card,
+.timeline-card,
+.shell {
+  --accent: rgba(91, 81, 57, 0.72);
+  --accent-stop: 45%;
+
+  background: radial-gradient(at 100% 0px, var(--accent), #151419 var(--accent-stop), #151419);
+}
+
+/* Pinned to the viewport rather than the document, so a long page (the queue)
+   shows the same corner treatment as a short one instead of stretching the
+   gradient over thousands of pixels. */
+.shell {
+  background-attachment: fixed;
+}
+
+/* The plane is dark, so page-level type inverts. Cards keep their own light
+   surface and their own ink — see `.card`. */
+.shell .page-head h1 {
+  color: #fff;
+}
+
+.shell .page-head p {
+  color: #cccccc;
+}
+
+.upload-card {
+  position: relative;
+  width: 100%;
+  max-width: 608px;
+  min-height: 240px;
+  border-radius: 16px;
+  overflow: hidden;
+  /* The plane behind it now carries the same gradient, so the hairline is what
+     keeps the card's edge readable. The shadow alone was not enough. */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: rgba(0, 0, 0, 0.78) 1px 12px 25px 0px;
+}
+
+.upload-card[data-state='success'] {
+  --accent: rgba(16, 118, 103, 0.93);
+  --accent-stop: 47%;
+}
+
+.upload-card[data-state='error'] {
+  --accent: rgba(166, 61, 42, 0.51);
+  --accent-stop: 47%;
+}
+
+/* Dropping is accepted anywhere on the card, so the whole surface responds. */
+.upload-card[data-dragging='true'] {
+  --accent: rgba(91, 81, 57, 0.88);
+}
+
+.upload-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 37px;
+  padding: 13px 13px 0 24px;
+}
+
+.upload-close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #d9d9d9;
+  cursor: pointer;
+  opacity: 0.85;
+}
+
+.upload-close:hover {
+  opacity: 1;
+}
+
+.upload-body {
+  display: flex;
+  flex-direction: row;
+  padding: 11px 32px 8px;
+}
+
+.upload-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 14px;
+  color: #c9ba92;
+}
+
+.upload-card[data-state='success'] .upload-icon {
+  color: #2fbf9b;
+}
+.upload-card[data-state='error'] .upload-icon {
+  color: #e08a72;
+}
+
+.upload-content {
+  margin-left: 32px;
+  min-width: 0;
+  flex: 1;
+}
+
+.upload-card h2 {
+  margin: 12px 0 10px;
+  font-size: 19.2px;
+  font-weight: 600;
+  line-height: 28.8px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.upload-card p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: #cccccc;
+}
+
+.upload-filename {
+  margin-top: 8px !important;
+  font-size: 14.4px !important;
+  color: #9a9a9a !important;
+  word-break: break-all;
+}
+
+/* Two cards, one column: the key strip sits above the upload hero and shares its
+   width, radius and hairline — but on a flat surface, so the upload card stays the
+   focal point rather than competing with it. */
+.upload-column {
+  width: 100%;
+  max-width: 608px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* Sit a little below dead-centre — the tab bar above wants the breathing room. */
+  transform: translateY(44px);
+}
+
+.upload-column .upload-card {
+  max-width: none;
+}
+
+.key-card {
+  display: flex;
+  flex-direction: row;
+  padding: 24px 32px 26px;
+  border-radius: 16px;
+  overflow: hidden;
+  /* Shares the upload card's accent surface — declared once, above. */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.key-card-icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 6px;
+  color: #c9ba92;
+}
+
+.key-card-content {
+  margin-left: 32px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* The heading matches the upload card's <h2> exactly — same size, weight, colour. */
+.key-card-label {
+  display: block;
+  margin: 0 0 12px;
+  font-size: 19.2px;
+  font-weight: 600;
+  line-height: 28.8px;
+  letter-spacing: 0;
+  color: #fff;
+}
+
+.key-card-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.key-card-input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  padding: 10px 14px;
+  border: 1px solid #34333b;
+  border-radius: 3.6px;
+  background: #0f0e12;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14.4px;
+  line-height: 22px;
+  transition: border-color 160ms ease;
+}
+
+.key-card-input::placeholder {
+  color: #6f6e77;
+}
+
+.key-card-input:focus {
+  outline: none;
+  border-color: #6b6a73;
+}
+
+.key-card-toggle {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border: 1px solid #34333b;
+  border-radius: 3.6px;
+  background: #222127;
+  color: #cccccc;
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.key-card-toggle:hover {
+  background: #2c2b33;
+}
+
+.key-card-hint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: #8f8f8f;
+}
+
+@media (max-width: 640px) {
+  .key-card {
+    padding: 18px 20px 20px;
+  }
+  .key-card-content {
+    margin-left: 20px;
+  }
+}
+
+/* Buttons: flat, near-square, content width — not glass and not full width. */
+.upload-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.upload-btn {
+  height: 42px;
+  padding: 10px 35.2px;
+  border: 0;
+  border-radius: 3.6px;
+  background: #222127;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14.4px;
+  font-weight: 400;
+  line-height: 22px;
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background: #2c2b33;
+}
+
+.upload-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* The reference gives both actions the identical fill — order carries primacy,
+   not colour. Matched exactly rather than inventing a brighter primary. */
+.upload-btn-primary {
+  background: #222127;
+}
+
+.upload-btn-primary:hover:not(:disabled) {
+  background: #2c2b33;
+}
+
+.upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-top: 15px;
+}
+
+.upload-progress-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-progress-label {
+  display: block;
+  margin-bottom: 5px;
+  text-align: right;
+  font-size: 14.4px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #cccccc;
+}
+
+.upload-track {
+  position: relative;
+  height: 6px;
+  border-radius: 50px;
+  background: #363636;
+  overflow: hidden;
+}
+
+.upload-track::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--progress-width, 0%);
+  border-radius: 50px;
+  background: linear-gradient(90deg, #5b5139, #8a7c5a 60%, #c9ba92);
+  transition: width 200ms ease;
+}
+
+/* Indeterminate: bytes are delivered and the server is reading, so a percentage
+   would be invented. */
+.upload-track[data-indeterminate='true']::after {
+  width: 38%;
+  animation: upload-slide 1.4s ease-in-out infinite;
+}
+
+@keyframes upload-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-track[data-indeterminate='true']::after {
+    animation: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 560px) {
+  .upload-body {
+    padding: 11px 20px 8px;
+  }
+  .upload-content {
+    margin-left: 18px;
+  }
+  .upload-progress {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .upload-btn {
+    padding: 10px 22px;
+  }
+}
+/* ---------- upload ---------- */
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 44px 24px;
+  text-align: center;
+  background: var(--surface);
+  border: 1.5px dashed var(--axis);
+  border-radius: var(--radius-lg);
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.dropzone p {
+  margin: 0;
+}
+
+.dropzone[data-dragging='true'] {
+  border-color: var(--series-1);
+  background: #f4f8fe;
+}
+
+.dropzone[data-disabled='true'] {
+  border-style: solid;
+}
+
+/* ---------- inline buttons ---------- */
+
+.linkish {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--series-1);
+  cursor: pointer;
+  text-decoration: underline;
+  font: inherit;
+}
+
+.cellbtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 3px 5px;
+  margin: -3px -5px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.cellbtn:hover {
+  background: var(--sunken);
+}
+
+.cellbtn[aria-selected='true'] {
+  background: #eaf1fc;
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+/* ---------- charts ---------- */
+
+.chart-wrap {
+  position: relative;
+}
+
+.axis-label {
+  font-size: 9px;
+  fill: var(--ink-muted);
+  font-family: var(--font);
+}
+
+.axis-title {
+  font-size: 10px;
+  fill: var(--ink-2);
+  font-family: var(--font);
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 12px));
+  background: var(--ink);
+  color: #fff;
+  padding: 6px 9px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.tooltip .muted {
+  color: #c3c2b7;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 168px) minmax(0, 1fr) 34px 46px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.bar-label {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  height: 9px;
+  border-radius: 3px;
+  background: var(--sunken);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--series-1);
+}
+
+.bar-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.bar-n {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.table-view {
+  margin-top: 14px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+
+.table-view summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.table-view table {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.table-view th,
+.table-view td {
+  padding: 5px 8px;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.compare-gap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 12px;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  font-size: 12px;
+  text-align: center;
+}
+
+.compare-gap span:first-child {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--critical);
+}
+
+@media (max-width: 900px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pageview {
+    position: static;
+  }
+  .compare {
+    grid-template-columns: 1fr;
+  }
+  .compare-gap {
+    border: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+  }
+  .bar-row {
+    grid-template-columns: minmax(0, 110px) minmax(0, 1fr) 32px 40px;
+  }
+}
+
+/* ---------- accuracy dashboard ----------
+ *
+ * A dark analytics surface on the shell's gold-gradient plane. Modelled on the
+ * Material Dashboard "analytics" layout — a stat-card row over a grid of chart
+ * cards — but re-themed: dark cards (never white), and the reference's green
+ * accent replaced by the app's gold ramp (#c9ba92 → #8a7c5a → #5b5139).
+ *
+ * Scoped under `.dash` so none of it touches the light `.card` the other tabs use.
+ * Two chart tokens, declared once: `--dash-gold` for the pipeline series and
+ * `--dash-base` for the recessive baseline series.
+ */
+.dash {
+  --dash-card: #191b22;
+  --dash-line: rgba(255, 255, 255, 0.09);
+  --dash-ink: #f4f4f5;
+  --dash-ink-2: #b7bac4;
+  --dash-ink-muted: #7f838f;
+  --dash-gold: linear-gradient(90deg, #8a7c5a, #c9ba92);
+  --dash-gold-solid: #c9ba92;
+  --dash-base: #3d404b;
+  --dash-mid: #6f6448;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dash-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dash-prov {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid var(--dash-line);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--dash-ink);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.dash-chip i {
+  font-style: normal;
+  color: var(--dash-ink-muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+/* dark segmented control for the verdict toggle */
+.dash-seg {
+  display: inline-flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--dash-line);
+  border-radius: 100px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.dash-seg button {
+  padding: 5px 14px;
+  border: 0;
+  background: transparent;
+  border-radius: 100px;
+  color: var(--dash-ink-2);
+  cursor: pointer;
+  font-weight: 500;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.dash-seg button[aria-pressed='true'] {
+  background: linear-gradient(135deg, #c9ba92, #8a7c5a);
+  color: #17181d;
+  font-weight: 600;
+}
+
+/* ---- stat cards ---- */
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.dash-stat {
+  position: relative;
+  overflow: hidden;
+  padding: 16px 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--dash-line);
+  background: var(--dash-card);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35);
+}
+
+.dash-stat.is-hero {
+  background: linear-gradient(135deg, #cabb93 0%, #9a8a5f 55%, #6f6248 100%);
+  border-color: transparent;
+}
+
+.dash-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dash-stat-label {
+  font-size: 12px;
+  color: var(--dash-ink-muted);
+}
+
+.dash-stat.is-hero .dash-stat-label {
+  color: rgba(23, 24, 29, 0.72);
+}
+
+.dash-stat-value {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-top: 8px;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-stat.is-hero .dash-stat-value {
+  color: #17181d;
+}
+
+.dash-stat-foot {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dash-stat-delta {
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-stat-delta.is-up {
+  color: var(--dash-gold-solid);
+}
+.dash-stat-delta.is-down {
+  color: #e08a72;
+}
+.dash-stat-delta.is-flat {
+  color: var(--dash-ink-2);
+  font-weight: 500;
+}
+
+.dash-stat.is-hero .dash-stat-delta {
+  color: #2a2410;
+}
+
+.dash-stat-note {
+  font-size: 12px;
+  color: var(--dash-ink-muted);
+}
+
+.dash-stat.is-hero .dash-stat-note {
+  color: rgba(23, 24, 29, 0.62);
+}
+
+/* ---- chart cards ---- */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.dash-card {
+  background: var(--dash-card);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.3);
+}
+
+.dash-card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--dash-line);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dash-card-head h2 {
+  color: var(--dash-ink);
+  font-size: 15px;
+}
+
+.dash-hint {
+  color: var(--dash-ink-muted);
+  font-size: 12px;
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+.dash-card-body {
+  padding: 18px;
+}
+
+.dash-note {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dash-ink-2);
+  max-width: 64ch;
+}
+
+/* ---- comparison bars (accuracy) ---- */
+
+.cmp {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cmp-row {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 52px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.cmp-label {
+  color: var(--dash-ink-2);
+}
+
+.cmp-track,
+.reg-track {
+  height: 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.cmp-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.cmp-fill.is-gold {
+  background: var(--dash-gold);
+}
+.cmp-fill.is-base {
+  background: var(--dash-base);
+}
+.cmp-fill.is-mid {
+  background: var(--dash-mid);
+}
+
+.cmp-val {
+  text-align: right;
+  font-weight: 600;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- token stack ---- */
+
+.tok {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tok-row {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.tok-name {
+  color: var(--dash-ink-2);
+}
+
+.tok-bar {
+  display: flex;
+  height: 18px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tok-seg {
+  height: 100%;
+}
+.tok-seg.is-full {
+  background: var(--dash-base);
+}
+.tok-seg.is-crop {
+  background: var(--dash-gold-solid);
+}
+.tok-seg.is-fallback {
+  background: #5b5139;
+}
+
+.tok-total {
+  text-align: right;
+  font-weight: 600;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.tok-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--dash-ink-muted);
+}
+
+.tok-legend .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.tok-legend .dot.is-crop {
+  background: var(--dash-gold-solid);
+}
+.tok-legend .dot.is-fallback {
+  background: #5b5139;
+}
+
+/* ---- crop / fallback split ---- */
+
+.csplit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.csplit-bar {
+  display: flex;
+  height: 30px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.csplit-seg {
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #17181d;
+  font-variant-numeric: tabular-nums;
+}
+
+.csplit-seg.is-crop {
+  background: var(--dash-gold-solid);
+}
+.csplit-seg.is-fallback {
+  background: var(--dash-base);
+  color: var(--dash-ink-2);
+}
+
+.csplit-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.csplit-card {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--dash-line);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.csplit-card.is-crop {
+  border-left: 3px solid var(--dash-gold-solid);
+}
+.csplit-card.is-fallback {
+  border-left: 3px solid var(--dash-base);
+}
+
+.csplit-acc {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.csplit-cap {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--dash-ink-2);
+}
+
+.csplit-n {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--dash-ink-muted);
+  font-family: var(--mono);
+}
+
+/* ---- region ablation ---- */
+
+.reg {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 52px 92px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.reg-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--dash-ink-2);
+}
+
+.reg-row.is-best .reg-name {
+  color: var(--dash-ink);
+  font-weight: 600;
+}
+
+.reg-badge {
+  padding: 1px 7px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, #c9ba92, #8a7c5a);
+  color: #17181d;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.reg-acc {
+  text-align: right;
+  font-weight: 600;
+  color: var(--dash-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.reg-tok {
+  text-align: right;
+  color: var(--dash-ink-muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 11.5px;
+}
+
+.dash-foot {
+  margin: 4px 0 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--dash-ink-muted);
+  max-width: 78ch;
+}
+
+.dash-foot code {
+  font-family: var(--mono);
+  color: var(--dash-ink-2);
+}
+
+@media (max-width: 620px) {
+  .csplit-cards {
+    grid-template-columns: 1fr;
+  }
+  .cmp-row {
+    grid-template-columns: minmax(0, 110px) minmax(0, 1fr) 46px;
+  }
+  .reg-row {
+    grid-template-columns: minmax(0, 92px) minmax(0, 1fr) 46px;
+  }
+  .reg-tok {
+    display: none;
+  }
+}
+
+/* ---------- full-viewport screen (accuracy tab, rebuilt) ----------
+ *
+ * One idea per screen: a tall, centred, deliberately empty section. Screen 1 is
+ * token optimization. Dark plane inherited from `.shell`; the app's gold ramp
+ * (#c9ba92 → #8a7c5a) carries the "optimised" series against a recessive grey
+ * baseline. Everything here is scoped under `.screen` so it never touches the
+ * light `.card` chrome the other tabs use.
+ */
+.screen {
+  --scr-ink: #f4f4f5;
+  --scr-ink-2: #b7bac4;
+  --scr-ink-muted: #7f838f;
+  --scr-gold: #c9ba92;
+  --scr-base: #3d404b;
+
+  min-height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px 80px;
+}
+
+.screen-eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--scr-gold);
+}
+
+.screen-title {
+  margin: 18px 0 0;
+  font-size: clamp(30px, 5vw, 52px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--scr-ink);
+}
+
+.screen-sub {
+  margin: 18px 0 0;
+  max-width: 56ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--scr-ink-2);
+}
+
+.screen-prov {
+  margin: 64px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--scr-ink-muted);
+}
+
+/* ---- token optimization blocks ---- */
+
+.tokopt {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 320px));
+  gap: 24px;
+  margin-top: 56px;
+  text-align: left;
+}
+
+.tokopt-block {
+  padding: 28px 26px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tokopt-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 22px;
+}
+
+.tokopt-n {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--scr-ink);
+}
+
+.tokopt-desc {
+  font-size: 12.5px;
+  color: var(--scr-ink-muted);
+}
+
+.tokopt-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tokopt-bar {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 46px;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.tokopt-lab {
+  color: var(--scr-ink-2);
+}
+
+.tokopt-track {
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.tokopt-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tokopt-fill.is-base {
+  background: var(--scr-base);
+}
+
+.tokopt-fill.is-gold {
+  background: linear-gradient(90deg, #8a7c5a, #c9ba92);
+}
+
+.tokopt-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--scr-ink);
+  font-weight: 500;
+}
+
+.tokopt-cut {
+  margin-top: 22px;
+  font-size: 14px;
+  color: var(--scr-ink-muted);
+}
+
+.tokopt-cut strong {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--scr-gold);
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 720px) {
+  .tokopt {
+    grid-template-columns: minmax(0, 320px);
+    gap: 20px;
+    margin-top: 44px;
+  }
+}
+
+/* ---------- screen 2 · accuracy ----------
+ *
+ * The hero is two before→after rows — tokens down, accuracy up — so the broken
+ * tradeoff reads in one glance. Beneath it a row of small credibility cards: same
+ * model, same documents, one variable. Colours inherit the `.screen` scope tokens.
+ */
+.acc-hero {
+  margin-top: 56px;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 28px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.acc-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 84px 28px 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  text-align: left;
+}
+
+.acc-row + .acc-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.acc-metric {
+  font-size: 13px;
+  color: var(--scr-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.acc-before {
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--scr-ink-muted);
+  text-align: right;
+}
+
+.acc-arrow {
+  text-align: center;
+  color: var(--scr-ink-muted);
+  font-size: 16px;
+}
+
+.acc-after {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--scr-ink);
+  text-align: right;
+}
+
+.acc-delta {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--scr-gold);
+  padding-left: 6px;
+}
+
+/* Both directions are wins here, so both deltas read gold — the icon carries the
+   direction, colour carries "good". */
+.acc-delta.is-up,
+.acc-delta.is-down {
+  color: var(--scr-gold);
+}
+
+/* ---- small credibility cards ---- */
+
+.minis {
+  margin-top: 40px;
+  width: 100%;
+  max-width: 720px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mini {
+  padding: 18px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.mini-val {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--scr-ink);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-lab {
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--scr-ink-muted);
+}
+
+@media (max-width: 720px) {
+  .acc-row {
+    grid-template-columns: minmax(0, 1fr) 64px 22px 76px;
+    row-gap: 4px;
+  }
+  .acc-delta {
+    grid-column: 2 / -1;
+    padding-left: 0;
+  }
+  .minis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- screen 3 · confidence signal ----------
+ *
+ * Two populations, not a before→after: the answers whose value landed in-region
+ * (gold, trusted) against those that fell back (grey, uncertain). A thin split
+ * bar carries the share; two cards carry the accuracy of each, with a meter so
+ * the 98-vs-65 gap is visible, not just stated.
+ */
+.sig-bar {
+  margin-top: 52px;
+  width: 100%;
+  max-width: 640px;
+  display: flex;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sig-seg {
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sig-seg.is-crop {
+  background: linear-gradient(90deg, #8a7c5a, #c9ba92);
+  color: #17181d;
+}
+
+.sig-seg.is-fallback {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--scr-ink-2);
+}
+
+.sig-cards {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 640px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sig-card {
+  padding: 26px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+
+.sig-card.is-crop {
+  border-color: rgba(201, 186, 146, 0.42);
+}
+
+.sig-pct {
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--scr-ink);
+}
+
+.sig-card.is-crop .sig-pct {
+  color: var(--scr-gold);
+}
+
+.sig-cap {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--scr-ink-2);
+  min-height: 2.8em;
+}
+
+.sig-meter {
+  margin-top: 16px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.sig-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sig-fill.is-crop {
+  background: linear-gradient(90deg, #8a7c5a, #c9ba92);
+}
+
+.sig-fill.is-fallback {
+  background: var(--scr-base);
+}
+
+.sig-n {
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--scr-ink-muted);
+  font-family: var(--mono);
+}
+
+.sig-gap {
+  margin-top: 30px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--scr-ink-2);
+}
+
+.sig-gap strong {
+  color: var(--scr-gold);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .sig-cards {
+    grid-template-columns: 1fr;
+  }
+  .sig-cap {
+    min-height: 0;
+  }
+}
+
+/* ---------- screen 4 · straight-through processing ----------
+ *
+ * Two piles — auto-accepted (gold, trusted) vs sent to review (grey) — then a
+ * three-up stat row (.minis-3) and a takeaway. Reuses the .mini card and the
+ * .sig-gap takeaway style so the four screens stay one visual family.
+ */
+.stp-piles {
+  margin-top: 52px;
+  width: 100%;
+  max-width: 640px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stp-pile {
+  padding: 30px 26px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  text-align: left;
+}
+
+.stp-pile.is-auto {
+  border-color: rgba(201, 186, 146, 0.42);
+  background: linear-gradient(160deg, rgba(201, 186, 146, 0.08), rgba(255, 255, 255, 0.02) 60%);
+}
+
+.stp-role {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--scr-ink-muted);
+}
+
+.stp-n {
+  margin-top: 10px;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--scr-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.stp-pile.is-auto .stp-n {
+  color: var(--scr-gold);
+}
+
+.stp-n span {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--scr-ink-muted);
+  letter-spacing: 0;
+}
+
+.stp-share {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--scr-ink-2);
+}
+
+.stp-note {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--scr-ink-muted);
+}
+
+.minis.minis-3 {
+  max-width: 600px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .stp-piles {
+    grid-template-columns: 1fr;
+  }
+  .minis.minis-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ---------- home (landing) ----------
+ *
+ * One screen, no scroll, no animation. Same dark `.shell` plane and PageTabs row
+ * as every other page, with a split hero: the pitch on the left, a glass
+ * "how it works" card on the right. Palette is `.screen`'s, so the landing reads
+ * as the same family as the tab pages.
+ */
+.home {
+  --scr-ink: #f4f4f5;
+  --scr-ink-2: #b7bac4;
+  --scr-ink-muted: #7f838f;
+  --scr-gold: #c9ba92;
+
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-gutter {
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 20px 20px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero + section cards, centred together in the space under the tab row. */
+.home-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 40px;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 56px;
+  align-items: start;
+}
+
+.home-lead {
+  max-width: 42ch;
+}
+
+.home-eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--scr-gold);
+}
+
+.home-title {
+  margin: 18px 0 0;
+  font-size: clamp(32px, 4.6vw, 54px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-transform: none;
+  color: var(--scr-ink);
+}
+
+/* Keep "AI-Powered" from breaking across the hyphen; it drops to the next line whole. */
+.home-nowrap {
+  white-space: nowrap;
+}
+
+.home-sub {
+  margin: 22px 0 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--scr-ink-2);
+}
+
+.home-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 11px 22px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.home-btn.is-primary {
+  /* The tab pages' selected-tab accent, used solid. */
+  background: #5b5139;
+  border-color: #5b5139;
+  color: #fff;
+}
+
+.home-btn.is-primary:hover {
+  background: #6b6045;
+  border-color: #6b6045;
+}
+
+.home-btn.is-ghost {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.home-btn.is-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+
+/* Three section cards spread beneath the hero — one per section, each a link to
+   its tab. Wider and larger than a chip, but held short of the full row. */
+.home-mini-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 920px;
+}
+
+.home-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px 22px 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  text-decoration: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.home-mini:hover {
+  border-color: rgba(201, 186, 146, 0.5);
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.home-mini-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--scr-ink);
+}
+
+.home-mini-desc {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--scr-ink-muted);
+}
+
+/* The single glass card. Nudged down from the top so it doesn't sit flush with
+   the eyebrow — still comfortably above the left column's buttons, so it adds no
+   height to the hero. */
+.home-card {
+  margin-top: 34px;
+  padding: 30px 30px 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.4);
+}
+
+.home-card-eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--scr-gold);
+}
+
+.home-card-lead {
+  margin: 14px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--scr-ink-2);
+}
+
+.home-steps {
+  list-style: none;
+  margin: 22px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.home-step-n {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 100px;
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--scr-gold);
+  border: 1px solid rgba(201, 186, 146, 0.4);
+  background: rgba(201, 186, 146, 0.08);
+}
+
+.home-step-body strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--scr-ink);
+}
+
+.home-step-body p {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--scr-ink-muted);
+}
+
+@media (max-width: 860px) {
+  .home-hero {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-top: 8px;
+  }
+  .home-lead {
+    max-width: none;
+  }
+  .home-mini-cards {
+    max-width: none;
+  }
+}
+
+@media (max-width: 620px) {
+  .home-mini-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================ Live progress */
+
+/* A gold nudge under the upload actions when the key is still missing. */
+.upload-note {
+  margin-top: 12px !important;
+  font-size: 13px !important;
+  color: #c9ba92 !important;
+}
+
+.live-stage {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+}
+
+.live-wrap {
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto;
+  padding-bottom: 60px;
+}
+
+.live-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.live-title {
+  margin: 0 0 6px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.live-summary {
+  margin: 0;
+  font-size: 14px;
+  color: #9a9a9a;
+}
+
+.live-exports {
+  display: flex;
+  gap: 10px;
+}
+
+.live-warming {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #c9ba92;
+}
+
+.live-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.live-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 15px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid rgba(201, 186, 146, 0.5);
+  border-radius: 12px;
+  background: #141318;
+}
+
+.live-row[data-status='ok'] { border-left-color: #2fbf9b; }
+.live-row[data-status='review'] { border-left-color: #d9a94a; }
+.live-row[data-status='not_found'] { border-left-color: rgba(255, 255, 255, 0.22); }
+.live-row[data-status='unreadable'] { border-left-color: #e0674f; }
+
+.live-row-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.live-file {
+  overflow: hidden;
+  color: #fff;
+  font-size: 14.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.live-track {
+  display: flex;
+  gap: 4px;
+  max-width: 340px;
+  margin: 10px 0 8px;
+}
+
+.live-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.live-seg[data-state='done'] { background: #c9ba92; }
+
+.live-seg[data-state='active'] {
+  background: #c9ba92;
+  animation: live-pulse 1s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.live-substage {
+  font-size: 12.5px;
+  color: #9a9a9a;
+}
+
+.live-elapsed {
+  color: #6f6e77;
+}
+
+.live-row-right {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+}
+
+.live-result {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.live-amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.live-amount[data-empty='true'] {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #6f6e77;
+}
+
+.live-conf {
+  font-size: 12px;
+  color: #9a9a9a;
+}
+
+.live-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.live-badge {
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.live-badge[data-tone='gold'] {
+  color: #c9ba92;
+  border-color: rgba(201, 186, 146, 0.35);
+  background: rgba(201, 186, 146, 0.08);
+}
+
+.live-badge[data-tone='green'] {
+  color: #2fbf9b;
+  border-color: rgba(47, 191, 155, 0.35);
+  background: rgba(47, 191, 155, 0.08);
+}
+
+.live-badge[data-tone='dim'] {
+  color: #9a9a9a;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.live-open {
+  flex: none;
+  color: #c9ba92;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.live-open:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .live-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .live-row-right {
+    justify-content: space-between;
+  }
+}
+
+/* ---- Live progress: review-queue + processing header ---- */
+
+.live-progressbar {
+  height: 5px;
+  margin-bottom: 14px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.live-progressbar span {
+  display: block;
+  height: 100%;
+  background: #c9ba92;
+  transition: width 400ms ease;
+}
+
+.live-now {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #cccccc;
+}
+.live-now strong { color: #fff; font-weight: 500; }
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c9ba92;
+  animation: live-pulse 1s ease-in-out infinite;
+}
+
+.live-section {
+  margin: 8px 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e6e6e6;
+}
+
+.live-watching {
+  margin-top: 28px;
+  font-size: 13.5px;
+  color: #9a9a9a;
+  text-align: center;
+}
+
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #d9a94a;
+  border-radius: 12px;
+  background: #141318;
+  font-family: var(--font);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+.review-row:hover { background: #1a191f; }
+.review-row[data-status='not_found'] { border-left-color: rgba(255, 255, 255, 0.22); }
+.review-row[data-status='unreadable'] { border-left-color: #e0674f; }
+
+.review-row-left {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.review-row-sub {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: #9a9a9a;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.review-row-right {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+}
+.review-cta {
+  color: #c9ba92;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* ---- Review modal ---- */
+
+.review-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.6);
+}
+.review-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 960px;
+  max-height: 88vh;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: #151419;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+.review-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.review-file {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.review-close {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: #9a9a9a;
+  font-size: 16px;
+  cursor: pointer;
+}
+.review-close:hover { color: #fff; }
+
+.review-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.review-page {
+  flex: 1.4;
+  min-width: 0;
+  padding: 18px;
+  overflow: auto;
+  background: #0f0e12;
+}
+.review-side {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 280px;
+  padding: 22px;
+}
+.review-what { margin-bottom: 20px; }
+.review-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8f8f8f;
+}
+.review-guess {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #e6e6e6;
+}
+.review-input-label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #cccccc;
+}
+.review-input {
+  height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #34333b;
+  border-radius: 6px;
+  background: #0f0e12;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.review-input:focus { outline: none; border-color: #c9ba92; }
+.review-error { margin: 8px 0 0; font-size: 12.5px; color: #e0674f; }
+.review-actions { display: flex; gap: 10px; margin-top: 18px; }
+.review-done h3 { margin: 0 0 10px; font-size: 17px; color: #fff; }
+.review-done p { margin: 0; font-size: 13.5px; line-height: 20px; color: #cccccc; }
+.review-done strong { color: #c9ba92; }
+
+@media (max-width: 720px) {
+  .review-body { flex-direction: column; }
+  .review-page { max-height: 40vh; }
+}
