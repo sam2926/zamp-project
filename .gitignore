@@ -1,0 +1,66 @@
+# ---------- ignored ----------
+
+# Datasets: large, and redistributable only from their original sources.
+data/*
+
+# Working material, not part of the submission
+Garbage/
+Resources/
+CLAUDE.md
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+
+# Personal working notes
+*.md
+
+# Python environment — 28,000 files, rebuilt from requirements.txt
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Node — rebuilt from package-lock.json
+node_modules/
+web/dist/
+web/.vite/
+
+# Secrets. A committed key is found by scrapers within minutes.
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# ---------- kept (negations must come last) ----------
+
+# The two documents meant to be read
+!README.md
+!decisions.md
+
+# How to fetch the datasets — the only setup instructions in the repo
+!data/README.md
+
+# The API contract, referenced by the README
+!API.md
+
+# The deployment runbook
+!DEPLOY.md
+
+# Small data the app and its tests genuinely need (the big corpus stays ignored):
+#   - the learned regions: the app loads one at startup, so a clone must have it
+#   - the saved evaluation runs: the performance check re-scores these in CI
+!data/region_*.json
+!data/runs/
+!data/runs/*.jsonl
+
+# Agent skills: project conventions, dataset facts and validation rules
+!.claude/
+!.claude/**/*.md
+test-folder-1/
+
+# Scratch: a raw generation prompt, not part of the submission
+component- prompts/
