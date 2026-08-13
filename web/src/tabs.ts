@@ -18,6 +18,8 @@ export const TABS: Tab[] = [
   { id: 'process', label: 'Process', path: '/process' },
   { id: 'accuracy', label: 'Accuracy', path: '/dashboard' },
   { id: 'heatmaps', label: 'Heat maps', path: '/heatmaps' },
-  // Always rightmost.
-  { id: 'future', label: 'Future optimizations', path: '/future' },
+  // Hidden from the nav for now while the content is still being reviewed. The
+  // page and its /future route are unchanged and still reachable by URL —
+  // uncomment to restore the button (must stay rightmost).
+  // { id: 'future', label: 'Future optimizations', path: '/future' },
 ]
