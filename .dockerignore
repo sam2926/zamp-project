@@ -1,0 +1,33 @@
+# Keep the build context small — none of this belongs in the image.
+.git
+.github
+.venv
+venv
+**/__pycache__
+*.pyc
+**/node_modules
+web/dist
+
+# Tests, notes, and local scratch
+tests
+test-folder-1
+Garbage
+Resources
+assets
+*.mov
+*.mp4
+
+# The big / gated / runtime data — the image needs only data/region_amount_due_80.json,
+# which is copied explicitly in the Dockerfile.
+data/docile
+data/ocr_cache
+data/kleister
+data/propublica-990-api
+data/sample_*
+data/*.db
+data/*.svg
+data/heatmap*
+
+# Secrets never enter the image
+.env
+.env.*
