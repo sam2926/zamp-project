@@ -1,5 +1,33 @@
 # <span style="color:#D6336C">Decisions</span>
 
+## <span style="color:#2E7D32">Problem statement selection</span>
+
+### <span style="color:#1565C0">Why did I pick "turn messy documents into structured data" over the other two?</span>
+
+**<span style="color:#B8860B">1 · I picked a problem with an objective ground truth.</span>**
+
+- Documents → structured data has a correct answer for every field; accuracy is a number I can report.
+- "Learn a user's process by watching" and "conversational agent" are graded on judgement like, _did it learn the task_, _was the conversation good_ and I would be the one marking my own work.
+- Every decision in this document is a measurement. That is only honest where the truth exists independently of me.
+
+**<span style="color:#B8860B">2 · It is a real industry problem a community is actively trying to crack.</span>**
+
+- Document extraction is an actively worked problem, research groups and companies compete to push accuracy on exactly this task.
+- That gives me an external bar to measure against, like an exam with a known passing mark, rather than a task I set and grade myself.
+- And it is a problem people genuinely need solved, finance teams still key these documents in by hand, so the work is real rather than a demo.
+
+**<span style="color:#B8860B">3 · It has a genuinely hard sub-problem to go deep on.</span>**
+
+- Most invoices arrive in a layout never seen before, 916 layouts across the set and 519 of them appearing exactly once, so anything that needs per-vendor setup breaks the moment a new one lands.
+- A third of documents carry no text layer and many are degraded scans, so a field's position on the page is never fixed.
+- The hard part I went at: pull the right field off a page whose layout is new, at a fraction of the token cost, and know when the answer is shaky, by learning where a kind of value tends to sit rather than where it sat last time.
+
+**<span style="color:#B8860B">4 · What I passed on, deliberately.</span>**
+
+- The conversational agent is the flattering demo, a model wrapper photographs well and hides how thin it is underneath. I took the measurable problem over the photogenic one.
+- "Learn by watching" is the most novel, but in five days its success is unfalsifiable; I could not have told you honestly whether it worked.
+- Even so, a trace of it lives in what I built: the system learns each client's documents from their own labelled examples and tightens as corrections come back. It is one capability inside the pipeline, not the ground it stands on, and on its own it would need far more training, runs and tuning before I would trust it to stand alone.
+
 ## <span style="color:#2E7D32">Data</span>
 
 ### <span style="color:#1565C0">Why did I choose the data that I chose?</span>
