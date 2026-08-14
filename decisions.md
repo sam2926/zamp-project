@@ -4,29 +4,22 @@
 
 ### <span style="color:#1565C0">Why did I pick "turn messy documents into structured data" over the other two?</span>
 
-**<span style="color:#B8860B">1 · I picked a problem with an objective ground truth.</span>**
+**<span style="color:#B8860B">1 · I chose the problem I could measure objectively.</span>**
 
-- Documents → structured data has a correct answer for every field; accuracy is a number I can report.
-- "Learn a user's process by watching" and "conversational agent" are graded on judgement like, _did it learn the task_, _was the conversation good_ and I would be the one marking my own work.
-- Every decision in this document is a measurement. That is only honest where the truth exists independently of me.
+- With document extraction, every field has a correct value that already sits on the page. That means I can measure how often the system gets it right and report it as a plain number, which let me base every decision in the project on evidence rather than impression.
+- Extraction offered the firmer ground on which to justify the results.
 
-**<span style="color:#B8860B">2 · It is a real industry problem a community is actively trying to crack.</span>**
+**<span style="color:#B8860B">2 · What I chose not to pursue, and why.</span>**
 
-- Document extraction is an actively worked problem, research groups and companies compete to push accuracy on exactly this task.
-- That gives me an external bar to measure against, like an exam with a known passing mark, rather than a task I set and grade myself.
-- And it is a problem people genuinely need solved, finance teams still key these documents in by hand, so the work is real rather than a demo.
+- The other two problems are open-ended by their nature: success is multi-dimensional and partly a matter of interpretation, so validating a solution to the same rigorous standard would call for a much larger evaluation, one not feasible within a five-day project.
+- "Learning a task by watching" is the most exciting, but it is also the hardest to evaluate in a short project.
+- Even so, a version of that idea does live inside what I built: the system learns each customer's documents from the examples they have already labelled, and improves as people correct its mistakes. It is one part of the pipeline rather than its foundation, and on its own it would need considerably more training and testing before I would rely on it.
 
-**<span style="color:#B8860B">3 · It has a genuinely hard sub-problem to go deep on.</span>**
+**<span style="color:#B8860B">3 · It contains a hard sub-problem worth solving properly.</span>**
 
-- Most invoices arrive in a layout never seen before, 916 layouts across the set and 519 of them appearing exactly once, so anything that needs per-vendor setup breaks the moment a new one lands.
-- A third of documents carry no text layer and many are degraded scans, so a field's position on the page is never fixed.
-- The hard part I went at: pull the right field off a page whose layout is new, at a fraction of the token cost, and know when the answer is shaky, by learning where a kind of value tends to sit rather than where it sat last time.
-
-**<span style="color:#B8860B">4 · What I passed on, deliberately.</span>**
-
-- The conversational agent is the flattering demo, a model wrapper photographs well and hides how thin it is underneath. I took the measurable problem over the photogenic one.
-- "Learn by watching" is the most novel, but in five days its success is unfalsifiable; I could not have told you honestly whether it worked.
-- Even so, a trace of it lives in what I built: the system learns each client's documents from their own labelled examples and tightens as corrections come back. It is one capability inside the pipeline, not the ground it stands on, and on its own it would need far more training, runs and tuning before I would trust it to stand alone.
+- Invoices come in a very large number of layouts, many of which a system will never have seen before, so any approach that has to be configured for each new supplier fails the moment a new one arrives.
+- Many documents also have no machine-readable text, or are poor-quality scans, so a field's exact position on the page can never be taken for granted.
+- The improvement I set out to make is this: most existing services extract data by sending the entire document to a large language model. I wanted to do better on both cost and accuracy by using the fact that invoices of a similar kind tend to place the same information in roughly the same area, the total amount, for example, usually appears towards the bottom-right of the page.
 
 ## <span style="color:#2E7D32">Data</span>
 
@@ -34,49 +27,50 @@
 
 **<span style="color:#B8860B">1 · I ruled out synthetic data before comparing anything.</span>**
 
-- With generated data you are both attacker and defender, you cannot discover a failure mode you never thought to simulate.
-- Ground truth by construction means every accuracy number is self-graded.
-- This eliminated DocILE's own 100,000 synthetic documents too. I took only the real ones.
+- With generated data I would be playing both sides, inventing the documents and then testing myself against them, so I could never uncover a failure I had not already thought to build in.
+- And because the correct answers are fixed at the moment the data is created, every accuracy score would really just be marking its own work.
 
-**<span style="color:#B8860B">2 · DocILE won on four things.</span>**
+**<span style="color:#B8860B">2 · DocILE was the best fit, for several reasons.</span>**
 
-- **What it gave us:** 5,680 labelled real documents:
-  DocILE's train and val, of which 3,850 are tax invoices and the rest orders, POs and receipts, drawn from public-inspection filings and the UCSF litigation archive.
-- **It is actually invoices.** This is a finance operations domain.
-- **The schema is relational.** 55 field types, and 93% of documents carry line items (one carries 110), so a query layer has real structure to work with.
-- **Bounding boxes ship with it.** Every value's position on the page is labelled, so "click a value, see exactly where it came from on the scan" is reliable to build, not guesswork.
-- **It is verifiably hard.** I sampled 400 PDFs: **34% contain no text layer at all.** 2,645 documents come from the UCSF litigation archive, degraded material I could not have faked credibly.
-- **Accepted in exchange:** it ships a single OCR engine, so I generate the disagreement signal myself, which the deployed product needed regardless, since a stranger's upload was never in a precomputed file. And access is a gated research licence.
+- **What it provides.** 5,680 labelled real documents from DocILE's training and validation sets. Of these, 3,850 are tax invoices and the rest are orders, purchase orders and receipts, drawn from public-inspection filings and the UCSF litigation archive.
+- **They are genuine invoices,** which is the domain finance operations actually works in.
+- **The data is richly structured.** It defines 55 different field types, and 93% of the documents contain line items (one has as many as 110), so there is real structure for a query layer to work with.
+- **It records where every value sits.** Each field is labelled with its position on the page, which makes a feature like "click a value and see exactly where it came from on the scan" straightforward to build rather than a matter of guesswork.
+- **It is genuinely difficult.** In a sample of 400 PDFs, 34% had no readable text layer at all, and 2,645 of the documents come from the UCSF litigation archive, degraded, real-world material that would have been hard to fake convincingly.
 
-**<span style="color:#B8860B">3 · Kleister-Charity was the strongest contender, and I measured it before rejecting it.</span>**
+**<span style="color:#B8860B">3 · Kleister-Charity was the strongest alternative, and I measured it before setting it aside.</span>**
 
-- It ships **three independent OCR engines per document**, so I could test a hypothesis before committing: on 1,729 documents **no engine wins**, and the union of all three beats every one of them on every field.
-- **That result shaped what I built.** The pipeline reads every page several ways instead of picking an engine — a measurement on the dataset I rejected determined the design of the one I chose.
-- Rejected as the spine: 8 flat fields, no bounding boxes, and charity reports sit one domain hop from finance operations.
+- It comes with three independent OCR readings of every document, which let me test an idea before committing to any dataset: across 1,729 documents, no single OCR engine was consistently best, and combining all three beat every individual one on every field.
+- That finding shaped how I think about reading a page, treating a single OCR reading with some caution rather than trusting it outright. The shipped pipeline still reads with one engine, and I have left reading with several as a clear next step.
+- I did not use it as the main dataset because it has only eight simple fields, records nothing about where values sit on the page, and charity reports are a step removed from the finance-operations setting I was aiming at.
+
+**<span style="color:#B8860B">4 · It is a real problem that a community is actively working on.</span>**
+
+- It is a problem people genuinely need solved: finance teams still enter these documents by hand today, so the work addresses a real need rather than a demonstration.
+- Extracting data from documents is something research groups and companies work on continually, publishing results and pushing accuracy higher year after year.
+- That gives me an external standard to measure against .
 
 ### <span style="color:#1565C0">What did I scope in?</span>
 
-**<span style="color:#B8860B">1 · I narrowed to one document type: tax invoices.</span>**
+**<span style="color:#B8860B">1 · I narrowed the work to a single document type: tax invoices (depth over breadth)</span>**
 
-- 3,512 to build on, 338 to score. Dropped orders, POs, receipts, proformas, credit notes, utility bills, debit notes.
-- **Sharper rules.** Line items summing to the total holds on an invoice, not a utility bill. Mixing types would have forced me to weaken the rule for everything.
-- **Sharper product.** "Invoice processing" is bought. "Document processing" is researched.
-- Most discarded types were unmeasurable anyway, 6 debit notes, 12 utility bills.
-- **Kept for free:** 107 orders and 21 receipts held aside as an out-of-distribution test. Real AP inboxes get non-invoices; now I can say what happens when one arrives.
+- This left 3,512 documents to build with and 338 to measure against, after setting aside orders, purchase orders, receipts, proformas, credit notes, utility bills and debit notes.
+- Keeping to one type lets the checking rules be strict and specific. On an invoice, for instance, the line items should add up to the total, a rule that would not hold if I mixed in other kinds of document.
+- It also makes the product clearer: a business buys "invoice processing" as a concrete service, whereas "document processing" is a much vaguer proposition.
 
-**<span style="color:#B8860B">2 · I chose layout variety over structural uniformity, deliberately.</span>**
+**<span style="color:#B8860B">2 · I deliberately chose variety of layout over uniformity.</span>**
 
-- 3,850 invoices span **916 layouts. 519 appear exactly once.** A handful of vendors invoice constantly; a long tail invoiced once.
-- **A uniform dataset would have let me build something that already exists and already fails.** Configure-per-layout OCR works until a new vendor appears, then needs a human to reconfigure it. That is the problem, not the solution.
-- So nothing in my pipeline assumes where a field sits. It reads each page several ways, checks the arithmetic, and flags disagreement, none of which cares about layout.
-- The distribution then splits the work honestly: 6% of layouts carry half the volume and reward caching; the 519 one-offs must work from scratch, every time.
-- **I report accuracy separately for repeat and unseen layouts** — the honest number most systems never publish. A 2-point gap, not a cliff, because the region never depended on the layout in the first place. On `val`, `amount_due`, from the saved run:
+- The 3,850 invoices span 916 distinct layouts, and 519 of those appear only once. A few suppliers invoice constantly, while a long tail of suppliers show up just a single time.
+- A neat, uniform dataset would have let me build something that already exists and already fails in practice: a system configured for each specific layout, which works until a new supplier appears and then needs a person to set it up again. That is the problem, not the solution.
+- Because of this, my approach never assumes where a field will be. It learns the general area a value tends to occupy rather than a fixed spot, so a new layout does not break it.
+- The variety also splits the work honestly: the top 6% of layouts account for half of all the invoices and are worth caching, while the 519 one-off layouts have to be handled from scratch every time.
+- Finally, I report accuracy separately for layouts the system has seen before and layouts it has not. The second figure is the honest one, and the one most systems never publish. On the validation set, for the "amount due" field I focused the demo on, the two are close rather than far apart, which matters, because the method was never tied to a particular layout in the first place:
 
-| layout         | pipeline  | whole-page baseline |
-| -------------- | --------- | ------------------- |
-| repeat (n=205) | **78.0%** | 74.6%               |
-| unseen (n=86)  | **75.6%** | 70.9%               |
-| all (n=291)    | 77.3%     | 73.5%               |
+| layout              | my pipeline |
+| ------------------- | ----------- |
+| seen before (n=205) | **78.0%**   |
+| never seen (n=86)   | **75.6%**   |
+| all (n=291)         | 77.3%       |
 
 ## <span style="color:#2E7D32">Architecture</span>
 
