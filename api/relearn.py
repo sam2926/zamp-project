@@ -16,9 +16,9 @@ from pathlib import Path
 from .region import Region, learn_region, save
 from .store import correction_boxes, connect
 
-# A single correction should not move the region — one reviewer's mistake would drag it.
-# Wait until there are enough to be a pattern rather than an accident.
-MIN_CORRECTIONS = 15
+# A handful of corrections should not move the region — one reviewer's mistake would drag it.
+# Wait until there are enough to be a genuine pattern rather than an accident.
+MIN_CORRECTIONS = 40
 # Corrections describe this customer's documents, so they count for more than a training
 # example — but not so much that fifteen of them overwhelm three thousand.
 CORRECTION_WEIGHT = 5
@@ -29,8 +29,13 @@ def should_relearn(conn, field: str, last_count: int = 0) -> bool:
 
 
 def relearn(field: str, original_boxes: list[list[float]], region_path: Path,
-            conn=None, coverage: float = 0.95) -> tuple[Region, dict]:
-    """Recompute the region from the original examples plus weighted corrections."""
+            coverage: float, conn=None) -> tuple[Region, dict]:
+    """Recompute the region from the original examples plus weighted corrections.
+
+    `coverage` is the field's own target (0.80 for amount_due) and must be passed by the
+    caller — there is deliberately no default, because a wrong default silently widens the
+    crop, which is exactly the bug this replaced.
+    """
     conn = conn or connect()
     corrections = correction_boxes(conn, field)
     if not corrections:

@@ -31,13 +31,14 @@ from .fingerprint import LayoutIndex, signature
 from .region import density_boxes, load as load_region
 
 STAGES = ["queued", "reading", "matching", "extracting", "checking", "done"]
-PIPELINE_TAG = "amount_due_80_v2"        # bump when a change would alter the cached answer
+PIPELINE_TAG = "amount_due_80_v3"        # bump when a change would alter the cached answer
 
 CACHE = Path("data/ocr_cache")
 _region = load_region(FIELDS["amount_due"].region_path)
-# The region's training baseline, captured once so a re-learn folds corrections into the
-# original evidence rather than into a region that already drifted from a prior correction.
-_ORIGINAL_BOXES = density_boxes(_region)
+# The training baseline lives in its own immutable file. Relearn always folds corrections
+# into this, never into a region that already absorbed earlier corrections — so corrections
+# describe the original distribution and can never compound across restarts.
+_ORIGINAL_BOXES = density_boxes(load_region(FIELDS["amount_due"].base_region_path))
 
 _jobs: dict[str, dict] = {}
 _order: list[str] = []
@@ -355,7 +356,8 @@ def apply_correction(job_id: str, value: str) -> dict | None:
             try:
                 global _region
                 _region, _ = relearn.relearn(
-                    "amount_due", _ORIGINAL_BOXES, FIELDS["amount_due"].region_path, conn)
+                    "amount_due", _ORIGINAL_BOXES, FIELDS["amount_due"].region_path,
+                    FIELDS["amount_due"].coverage, conn)
                 region_moved = True
             except Exception:
                 region_moved = False

@@ -45,6 +45,8 @@ class Field:
     label: str
     prompt: str
     region_path: Path
+    base_region_path: Path   # immutable training baseline; relearn folds corrections into this
+    coverage: float          # share of past positions the crop must hold — relearn honours this
 
 
 FIELDS: dict[str, Field] = {
@@ -55,6 +57,8 @@ FIELDS: dict[str, Field] = {
         # The 80% region: tighter beat wider on the live run — fewer distractors, not less
         # context (decisions.md, "How big should the crop be?").
         region_path=Path("data/region_amount_due_80.json"),
+        base_region_path=Path("data/region_amount_due_80.base.json"),
+        coverage=0.80,
     ),
 }
 
