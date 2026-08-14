@@ -42,9 +42,11 @@ RUN pip install --user --no-cache-dir -r requirements.txt
 # Bake the OCR model into the image so the first upload isn't a cold model download.
 RUN python -c "from doctr.models import ocr_predictor; ocr_predictor(pretrained=True)"
 
-# The code, the one region file the app loads at startup, and the built frontend.
+# The code, the region files the app loads at startup (the live crop plus its immutable
+# training baseline), and the built frontend.
 COPY --chown=user:user api/ ./api/
 COPY --chown=user:user data/region_amount_due_80.json ./data/region_amount_due_80.json
+COPY --chown=user:user data/region_amount_due_80.base.json ./data/region_amount_due_80.base.json
 COPY --chown=user:user --from=web /web/dist ./web/dist
 
 # No key is shipped: uploads use the visitor's own key, so keyless requests are refused.
