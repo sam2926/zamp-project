@@ -74,101 +74,109 @@
 
 ## <span style="color:#2E7D32">Architecture</span>
 
-### <span style="color:#1565C0">How much of the page does the model need to see?</span>
+### <span style="color:#1565C0">How much of the page does the model need to read?</span>
 
-**<span style="color:#B8860B">1 · The model reads a small learned region, not the whole page.</span>**
+**<span style="color:#B8860B">1 · The model reads only a small, learned area of each page, not the whole thing.</span>**
 
-- Every document gets one model call; the decision is how much of the page that call carries.
-- Crop to the region the field usually occupies and send only that, about half the tokens for the same answer: `amount_due` scores 77.3% at 86% of the whole-page baseline's tokens, better _and_ cheaper.
-- The learning lives in _what the model is shown_: a human correction re-shapes the region, so the crop tightens over time with no per-layout configuration to maintain.
+- When a document goes to a language model, the decision is how much of the page that single call has to carry.
+- Instead of the entire page, I send only the area where the field of interest appears. On the "amount due" field, that is both more accurate and less costly than reading the whole page. (How that area is worked out is the next question below.)
+- **More accurate** — the region crop returns the correct value more often than the whole page does:
 
-**<span style="color:#B8860B">2 · The only page we never re-read is one we have already read, byte for byte.</span>**
+| whole page | region crop | gain  |
+| ---------- | ----------- | ----- |
+| 73.5%      | **77.3%**   | +3.8% |
 
-- A SHA-256 of the file short-circuits literal re-uploads — month-end reruns, double-clicks — at no cost.
-- A fresh scan is different bytes, so it is still read in full. The cache dedups work; it never skips it.
+- **Fewer tokens** — and it does so while sending less text to the model:
 
-### <span style="color:#1565C0">Why go deep on one field instead of shallow on many?</span>
+| whole page | region crop | saved |
+| ---------- | ----------- | ----- |
+| 74,181     | **63,918**  | 14%   |
 
-**<span style="color:#B8860B">1 · I took one field all the way, rather than many part-way.</span>**
+- The system learns that area from the data rather than being told it. When a person corrects an answer, the area is nudged to fit, so it tightens over time and needs no manual setup for each new layout.
 
-- One field with measured accuracy on held-out data, a real confidence signal and a real cost number is worth more than five fields demoed but never proven.
-- It proves the whole pipeline end to end on something unambiguous, instead of spreading thin across many.
+**<span style="color:#B8860B">2 · The one document it never has to read twice is an exact duplicate.</span>**
 
-### <span style="color:#1565C0">Where on the page do we look for the value?</span>
+- Before doing anything else, the system takes a fingerprint of the file's exact bytes (a SHA-256 hash). If that fingerprint has been seen before, the same file re-uploaded, a month-end rerun, a double-click, it returns the stored answer at no cost.
+- A fresh scan of the same invoice is a different file, so it is still read in full. This skips only genuine duplicates, never real work.
 
-**<span style="color:#B8860B">1 · I store the neighbourhood, not the pixel.</span>**
+### <span style="color:#1565C0">Why focus on one field rather than many?</span>
 
-- Over a 50×50 grid across thousands of documents, count which cells each field's box lands in, and take the smallest rectangle holding a target share of that mass.
-- The same value lands in a consistent region across hundreds of different layouts, even as its exact spot shifts from one scan to the next.
-- **Count every cell the box touches, not the cell under its centre**, a centre-based region clips the value's own text out of the crop.
-- **A solid rectangle, not the ragged set of hottest cells**, a ragged set has holes a value can fall through, while a rectangle contains anything within its bounds.
+**<span style="color:#B8860B">1 · I took a single field the whole way, instead of many part of the way.</span>**
 
-**<span style="color:#B8860B">2 · The region is not an extractor.</span>**
+- One field, measured properly on held-out data with a real accuracy figure and a real cost figure, tells you far more than five fields shown in a demo but never verified.
+- It also let me prove the entire pipeline end to end on something unambiguous, rather than spreading the effort thinly and leaving every part half-finished.
 
-- It never reads the value. It only decides what the model is allowed to see, which is why it holds up where a fixed box would miss.
+### <span style="color:#1565C0">How does the system decide where on the page to look?</span>
 
-### <span style="color:#1565C0">How tight is the crop, and what goes inside it?</span>
+**<span style="color:#B8860B">1 · It learns the general neighbourhood a value sits in, not an exact position.</span>**
 
-**<span style="color:#B8860B">1 · Tighter beat wider, against my prediction.</span>**
+- Working across thousands of documents, I divide each page into a grid of 50×50 cells and count how often the target value falls in each cell. The result is a heat-map of where that value tends to appear.
+- From that heat-map I take the smallest rectangle that still captures most of those appearances. The same value reliably lands inside this rectangle across hundreds of different layouts, even though its exact spot shifts a little from one scan to the next.
+- I count every cell the value's box touches, not just the cell under its centre. Using the centre alone would draw the rectangle too tightly and clip part of the value out of the crop.
+- I also use one solid rectangle rather than a scattered set of the hottest cells. A scattered set leaves gaps a value can fall into, whereas a rectangle contains anything within its edges.
 
-- I expected the wider rectangle to keep more captions and win. The 80% region beat the 95% one: `amount_due` 83.5% vs 80.0%, at 82% vs 98% of baseline tokens.
-- **Tightening removed distractors, not context:** the wide rectangle swept in line-item amounts and subtotals, many money-shaped tokens to choose between, while the tight one sits on the totals block.
+**<span style="color:#B8860B">2 · This area only decides what the model sees; it does not read the value itself.</span>**
 
-**<span style="color:#B8860B">2 · Flat text beat every coordinate format.</span>**
+- The rectangle never extracts anything. Its only job is to narrow down what the model is shown. Because it describes a general area rather than a fixed point, it keeps working even where a rigid, fixed position would miss.
 
-- Same field, same page, only the payload changed:
+### <span style="color:#1565C0">How large should the crop be, and in what form is it sent?</span>
 
-| format sent to the model        | accuracy  | tokens |
-| ------------------------------- | --------- | ------ |
-| flat text (reading-order lines) | **35.5%** | 24,431 |
-| JSON `[word, x, y]`             | 26.9%     | 77,248 |
-| words only, no line breaks      | 10.8%     | 32,156 |
+**<span style="color:#B8860B">1 · Sending the text as plain laid-out lines beat sending it with coordinates.</span>**
 
-- **Let go: coordinates.** They tripled the cost and lost accuracy. Line breaks alone are worth 25 points, delete them and a two-column invoice interleaves into nonsense.
-- Why flat text works: words are grouped into lines using each word's own height as the ruler (`|Δy| < 0.7 × height`). Bare coordinates give the model no ruler, and it merges lines that sit only fractionally apart into one.
+- I compared several ways of passing the same page text to the model, changing only the format:
 
-**<span style="color:#B8860B">3 · A correction to my own conclusion.</span>**
+| how the text was sent to the model               | accuracy  | tokens |
+| ------------------------------------------------ | --------- | ------ |
+| plain text, kept in reading-order lines          | **35.5%** | 24,431 |
+| a list of words with their x, y coordinates      | 26.9%     | 77,248 |
+| the same words, but with the line breaks removed | 10.8%     | 32,156 |
 
-- I first blamed coordinates for the model's errors. Removing my _layout hints_ from the same JSON took it 21.5% → 32.3%, the prompt was the variable, not the coordinates. The hint ("words close together form a block") is exactly what glued addresses onto company names.
+- Attaching coordinates roughly tripled the token cost and made accuracy worse, so I dropped them. The line breaks alone are worth about 25 points: remove them and a two-column invoice collapses into interleaved nonsense.
+- Plain lines work because the words are grouped into lines using each word's own height as the yardstick for what counts as the same line. Given only raw coordinates, the model has no such yardstick and merges lines that sit only slightly apart.
 
-### <span style="color:#1565C0">What happens when the value isn't in the crop?</span>
+**<span style="color:#B8860B">3 · One conclusion of mine turned out to be wrong, and it is worth recording.</span>**
 
-**<span style="color:#B8860B">1 · Fall back to the whole page, not the unsearched remainder.</span>**
+- At first I blamed the coordinates for the poorer results. But when I removed the layout hints from my own prompt and left the coordinates in, accuracy rose from 21.5% to 32.3%. The prompt was the real problem, not the coordinates: my hint ("words close together form a block") is exactly what led the model to glue street addresses onto company names.
 
-- Sending only the complement is cheaper and was tempting. It breaks on a value straddling the boundary: half in the crop, half in the remainder, and neither call sees a whole answer.
-- So a miss costs crop + full page. That is the price of never returning a truncated value.
-- The fallback rate is now the main cost lever, every point off it is real tokens saved (see the Future Optimizations tab).
+### <span style="color:#1565C0">What happens when the value is not inside the crop?</span>
 
-### <span style="color:#1565C0">When do we trust the answer, and when does a human see it?</span>
+**<span style="color:#B8860B">1 · The system falls back to the whole page, not to the leftover part of it.</span>**
 
-**<span style="color:#B8860B">1 · The model is never trusted on its own word.</span>**
+- Sending only the remaining, un-cropped part of the page would be cheaper, and it was tempting. But a value that straddles the crop's edge would be split, half inside the crop, half in the remainder and neither call would see it whole.
+- So a miss costs the crop plus a full-page read. That is the price of never returning half of a value.
+- This makes the miss rate the main thing left to improve on cost, since every fallback avoided is real tokens saved. (This is picked up on the Future Optimizations page.)
 
-- The returned value must appear verbatim in the OCR text, anything else was invented. Then deterministic format checks: length, contains letters, not a caption ("BILL TO"), not identical to the vendor name.
+### <span style="color:#1565C0">When is an answer trusted, and when does a person check it?</span>
 
-**<span style="color:#B8860B">2 · The strongest confidence signal is free and measured.</span>**
+**<span style="color:#B8860B">1 · The model's word is never taken on its own.</span>**
 
-- **Did the value land in its expected region?** When the crop answered, 102/103 were correct (99%); when it fell back, 123/188 (65%). One measured signal separates the two.
-- **Let go, for now: the hand-set weights.** `0.55 × ocr + 0.45 × heat` flags almost every document for review, correct ones included, noise. It stays retired until it is fit on labelled data rather than guessed.
+- Any value it returns has to appear, character for character, in the text the OCR actually read; anything else is treated as invented.
+- After that come a few simple format checks — a sensible length, containing letters, not just a caption such as "BILL TO", and not identical to the vendor's own name.
 
-### <span style="color:#1565C0">How did I measure without fooling myself?</span>
+**<span style="color:#B8860B">2 · The most reliable confidence signal costs nothing and is measured, not guessed.</span>**
 
-**<span style="color:#B8860B">1 · A dev slice carved from train, so val is sat once.</span>**
+- The single best predictor of a correct answer is simply whether the value came from the crop or from the whole-page fallback. When the crop answered, 102 of 103 were right (99%); when the system fell back to the full page, only 123 of 188 were (65%).
+- I deliberately do not rely on the hand-picked scoring weights I first wrote (`0.55 × OCR confidence + 0.45 × position`). In practice they flag almost every document for review, correct ones included, which is no signal at all. They stay switched off until they can be fitted properly on labelled data rather than guessed.
 
-- Measuring on the data I built from tells me nothing. Checking against `val` each time quietly spends it, every look is a small fit, and ten cycles in the headline is inflated.
-- So 400 train documents become `dev`, a practice exam I can retake freely; `val` is the real exam, touched once.
+### <span style="color:#1565C0">How did I measure results without misleading myself?</span>
 
-**<span style="color:#B8860B">2 · The dev slice is cut two ways, because there are two questions.</span>**
+**<span style="color:#B8860B">1 · I kept one slice of data as a final exam, sat only once.</span>**
 
-- **Random documents held out** — does it work on a new invoice from a vendor we know?
-- **Whole layouts held out** — does it work on a vendor we have never seen? The honest number, and the one most systems never publish.
+- Measuring on the same data I built the system from proves nothing. But repeatedly checking against the official test set quietly uses it up: each look nudges a choice to fit it, and after enough rounds the headline figure flatters rather than informs.
+- So I set aside 400 documents from the training data to act as a practice set I could reuse freely, and kept the real test set for a single, final measurement. Every number above comes from data held back in this way.
 
-### <span style="color:#1565C0">How and where does it ship?</span>
+**<span style="color:#B8860B">2 · I split that practice set two ways, because there are two different questions.</span>**
 
-**<span style="color:#B8860B">1 · One container, on Hugging Face Spaces.</span>**
+- Holding out random documents answers one question: does it work on a new invoice from a supplier we have already seen?
+- Holding out whole layouts answers the harder one: does it work on a supplier we have never seen before? That second figure is the honest one, and the one many systems never report.
 
-- docTR pulls in torch — the image is ~2.5GB and needs real RAM, which rules out Vercel, Netlify and Render's free tier. HF Spaces gives 16GB free with a public URL.
-- FastAPI serves the React build from the same origin: no CORS, no second deploy pipeline, no two services pointing at each other. They redeploy together, fine at this size, wrong at scale.
+### <span style="color:#1565C0">How and where is it deployed?</span>
 
-**<span style="color:#B8860B">2 · No API key ships with the repo.</span>**
+**<span style="color:#B8860B">1 · A single container on Google Cloud Run.</span>**
 
-- Anyone running it supplies their own. Everything except the model call runs locally. OCR, region cropping, validation, scoring, so a committed key would only bill the author for every stranger's usage.
+- The OCR library (docTR) depends on PyTorch, which makes the container about 2.5GB and needs real memory to run. That rules out the small serverless free tiers such as Vercel, Netlify and Render. Google Cloud Run runs the container directly, scales to zero when idle so it costs nothing between visits, and serves it at a stable public URL.
+- The same server hosts both the API and the built front-end from one place, so there is no cross-origin configuration and no second deployment to keep in step. The trade-off is that the two are released together — fine at this scale, though it would not suit a much larger system.
+
+**<span style="color:#B8860B">2 · No API key is shipped with the code.</span>**
+
+- Anyone running it supplies their own key. Everything except the model call — the OCR, the cropping, the checks and the scoring — runs locally, so a key committed to the repository would do nothing but bill me for every stranger's usage.

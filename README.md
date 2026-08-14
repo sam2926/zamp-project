@@ -179,4 +179,4 @@ API.md        the API contract between api/ and web/
 
 **<span style="color:#B8860B">2 · GitHub repository</span>** — this.
 
-**<span style="color:#B8860B">3 · Deployed URL</span>** — planned (HF Spaces on Docker); runs locally today.
+**<span style="color:#B8860B">3 · Deployed URL</span>** — [live on Google Cloud Run](https://invoice-extraction-108246044000.us-central1.run.app); runs locally too (see Setup).
